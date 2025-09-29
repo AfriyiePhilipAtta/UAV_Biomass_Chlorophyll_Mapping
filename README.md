@@ -1,4 +1,4 @@
-cUAV-Based Biomass and Chlorophyll Mapping
+UAV-Based Biomass and Chlorophyll Mapping
 This project demonstrates the use of UAV multispectral imagery and field data to estimate Leaf Area Index (LAI) and chlorophyll content (SPAD values). The workflow integrates remote sensing, ground truth data, and supervised regression modeling in R to generate spatial prediction maps that support precision agriculture and vegetation monitoring.
 
 📂 Project Structure
