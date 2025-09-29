@@ -13,6 +13,7 @@ README.md → Project documentation.
 LICENSE → Open-source license (MIT).
 
 ⚙️ Requirements
+
 Install the following R packages before running the scripts:
 install.packages(c("sf", "terra", "ggplot2", "caret", "readr", "dplyr", "viridis"))
 
