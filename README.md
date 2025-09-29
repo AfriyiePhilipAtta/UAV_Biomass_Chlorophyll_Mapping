@@ -56,6 +56,7 @@ field_data <- read_csv("DS4_Fielddata.csv")
 field_data_plots <- inner_join(subplots, field_data, by = "layer")
 
 # Extract spectral values per subplot
+
 extracted_values <- extract(ms_image, vect(field_data_plots), fun = mean, na.rm = TRUE)
 
 analysis_data <- cbind(st_drop_geometry(field_data_plots), extracted_values[,-1])
