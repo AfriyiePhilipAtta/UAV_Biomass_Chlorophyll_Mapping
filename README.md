@@ -1,43 +1,18 @@
 This project demonstrates the use of UAV multispectral imagery and field data to estimate Leaf Area Index (LAI) and chlorophyll content (SPAD values). The workflow integrates remote sensing, ground truth data, and supervised regression modeling in R to generate spatial prediction maps that support precision agriculture and vegetation monitoring.
 
-📂 Repository Structure
-UAV-LAI-SPAD-Prediction/
-│
-├── datasets/ # Raw UAV imagery, AOI, subplots, and field data
-│ ├── DS4_UAV_Multispectral_Image.tif
-│ ├── DS4_Subplots.gpkg
-│ ├── DS4_Fielddata.csv
-│ └── DS4_field_spectral_data.csv
-│
-├── scripts/ # R scripts for full workflow
-│ ├── compute_indices.R
-│ ├── merge_field_data.R
-│ ├── train_models.R
-│ ├── validate_models.R
-│ └── predict_maps.R
-│
-├── results/ # Model outputs and prediction maps
-│ ├── Predicted_LAI_CV.tif
-│ ├── Predicted_SPAD_CV.tif
-│ └── performance_summary.csv
-│
-├── docs/ # Documentation and figures
-│ ├── README.md
-│ └── plots/
-│ ├── LAI_vs_NDVI.png
-│ ├── LAI_vs_NDRE.png
-│ ├── SPAD_vs_GNDVI.png
-│ ├── Rsquared_comparison.png
-│ └── RMSE_comparison.png
-│
-├── LICENSE # Open-source license
-
-            
+📂 Project Structure
+DS4_UAV_Multispectral_Image.tif → UAV multispectral imagery (raw spectral bands).
+DS4_AOI.gpkg → Area of Interest (AOI) boundary shapefile.
+DS4_Subplots.gpkg → Subplot boundaries for field sampling.
+DS4_field_spectral_data.csv → Spectral readings extracted from UAV imagery.
+DS4_Fielddata.csv → Ground truth LAI and SPAD measurements.
+Predicted_LAI_CV.tif → Predicted LAI raster (cross-validation output using NDRE).
+Predicted_SPAD_CV.tif → Predicted SPAD raster (cross-validation output using GNDVI/NDVI).
+README.md → Project documentation.
+LICENSE → Open-source license (MIT).
 
 ⚙️ Requirements
-
 Install the following R packages before running the scripts:
-
 install.packages(c("sf", "terra", "ggplot2", "caret", "readr", "dplyr", "viridis"))
 
 🚀 Workflow
@@ -64,7 +39,6 @@ analysis_data <- cbind(st_drop_geometry(field_data_plots), extracted_values[,-1]
 write.csv(analysis_data, "DS4_field_spectral_data.csv", row.names = FALSE)
 
 4. Regression Modeling
-
 Fit models for LAI and SPAD against each vegetation index:
 
 lm_lai_ndvi  <- lm(LAI ~ ndvi,  data = analysis_data)
