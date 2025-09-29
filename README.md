@@ -29,18 +29,21 @@ Install the following R packages before running the scripts:
 install.packages(c("sf", "terra", "ggplot2", "caret", "readr", "dplyr", "viridis"))
 
 🚀 Workflow
+
 1. Load UAV Imagery
 ms_image <- rast("DS4_UAV_Multispectral_Image.tif")
 names(ms_image) <- c("GR", "RD", "RE", "NI")
 
 2. Compute Vegetation Indices
+   
 ms_image$ndvi  <- (ms_image$NI - ms_image$RD) / (ms_image$NI + ms_image$RD)
 ms_image$ndre  <- (ms_image$NI - ms_image$RE) / (ms_image$NI + ms_image$RE)
 ms_image$gndvi <- (ms_image$NI - ms_image$GR) / (ms_image$NI + ms_image$GR)
 ms_image$evi   <- 2.5 * (ms_image$NI - ms_image$RD) / 
                   (ms_image$NI + 6 * ms_image$RD - 7.5 * ms_image$GR + 1)
 
-3. Merge Subplots & Field Data
+4. Merge Subplots & Field Data
+   
 subplots   <- st_read("DS4_Subplots.gpkg")
 field_data <- read_csv("DS4_Fielddata.csv")
 
