@@ -30,7 +30,9 @@ UAV-LAI-SPAD-Prediction/
 │       ├── Rsquared_comparison.png
 │       └── RMSE_comparison.png
 │
-├── LICENSE                  # Apache-2.0 license
+├── LICENSE                  # Open-source license
+└── .gitignore               # Ignore large files, temporary data, logs
+
             
 
 ⚙️ Requirements
