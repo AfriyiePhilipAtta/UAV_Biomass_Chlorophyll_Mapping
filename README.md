@@ -1,22 +1,37 @@
 This project demonstrates the use of UAV multispectral imagery and field data to estimate Leaf Area Index (LAI) and chlorophyll content (SPAD values). The workflow integrates remote sensing, ground truth data, and supervised regression modeling in R to generate spatial prediction maps that support precision agriculture and vegetation monitoring.
 
-📂 Project Structure
-
-DS4_UAV_Multispectral.tif → UAV multispectral imagery (raw spectral bands).
-
-DS4_AOI.gpkg → Area of Interest (AOI) boundary shapefile.
-
-DS4_Subplots.gpkg → Subplot boundaries for field sampling.
-
-DS4_field_spectral_data.csv → Spectral readings collected in the field.
-
-DS4_Fielddata.csv → Ground truth LAI and SPAD measurements.
-
-Predicted_LAI_Best.tif → Predicted LAI raster (using best-performing index).
-
-Predicted_SPAD_Best.tif → Predicted SPAD raster (using best-performing index).
-
-README.md → Project documentation.
+📂 Repository Structure
+UAV-LAI-SPAD-Prediction/
+│
+├── datasets/                # Raw UAV imagery, AOI, subplots, and field data
+│   ├── DS4_UAV_Multispectral_Image.tif
+│   ├── DS4_Subplots.gpkg
+│   ├── DS4_Fielddata.csv
+│   └── DS4_field_spectral_data.csv
+│
+├── scripts/                 # R scripts for full workflow
+│   ├── compute_indices.R
+│   ├── merge_field_data.R
+│   ├── train_models.R
+│   ├── validate_models.R
+│   └── predict_maps.R
+│
+├── results/                 # Model outputs and prediction maps
+│   ├── Predicted_LAI_CV.tif
+│   ├── Predicted_SPAD_CV.tif
+│   └── performance_summary.csv
+│
+├── docs/                    # Documentation and figures
+│   ├── README.md
+│   └── plots/
+│       ├── LAI_vs_NDVI.png
+│       ├── LAI_vs_NDRE.png
+│       ├── SPAD_vs_GNDVI.png
+│       ├── Rsquared_comparison.png
+│       └── RMSE_comparison.png
+│
+├── LICENSE                  # Apache-2.0 license
+            
 
 ⚙️ Requirements
 
@@ -25,115 +40,88 @@ Install the following R packages before running the scripts:
 install.packages(c("sf", "terra", "ggplot2", "caret", "readr", "dplyr", "viridis"))
 
 🚀 Workflow
-1. Load Data
-library(sf)
-library(terra)
-library(caret)
-library(dplyr)
-library(viridis)
-
-# Load UAV imagery
-ms_image <- rast("DS4_UAV_Multispectral.tif")
+1. Load UAV Imagery
+ms_image <- rast("DS4_UAV_Multispectral_Image.tif")
 names(ms_image) <- c("GR", "RD", "RE", "NI")
 
-# Load AOI, subplots, and field data
-aoi <- st_read("DS4_AOI.gpkg")
-subplots <- st_read("DS4_Subplots.gpkg")
-field_data <- read_csv("DS4_Fielddata.csv")
-
-2. Merge Field Data
-# Convert subplot polygons to centroids
-subplots_centroid <- st_centroid(subplots)
-
-# Join field data with subplot geometry
-field_data_sf <- subplots_centroid %>%
-  left_join(field_data, by = "subplot_id")
-
-# Extract spectral values from UAV imagery
-spectral_data <- terra::extract(ms_image, vect(field_data_sf))
-
-# Merge indices with ground truth measurements
-merged_data <- cbind(field_data_sf, spectral_data)
-
-3. Compute Vegetation Indices
-# Vegetation indices
+2. Compute Vegetation Indices
 ms_image$ndvi  <- (ms_image$NI - ms_image$RD) / (ms_image$NI + ms_image$RD)
 ms_image$ndre  <- (ms_image$NI - ms_image$RE) / (ms_image$NI + ms_image$RE)
 ms_image$gndvi <- (ms_image$NI - ms_image$GR) / (ms_image$NI + ms_image$GR)
-ms_image$evi   <- 2.5 * ((ms_image$NI - ms_image$RD) / 
-                         (ms_image$NI + 6*ms_image$RD - 7.5*ms_image$GR + 1))
+ms_image$evi   <- 2.5 * (ms_image$NI - ms_image$RD) / 
+                  (ms_image$NI + 6 * ms_image$RD - 7.5 * ms_image$GR + 1)
 
-4. Train Models for All Indices
-# Train control
-ctrl <- trainControl(method = "cv", number = 10)
+3. Merge Subplots & Field Data
+subplots   <- st_read("DS4_Subplots.gpkg")
+field_data <- read_csv("DS4_Fielddata.csv")
 
-# Train models for LAI
-lai_models <- list(
-  NDVI  = train(LAI ~ ndvi, data = merged_data, method = "lm", trControl = ctrl),
-  NDRE  = train(LAI ~ ndre, data = merged_data, method = "lm", trControl = ctrl),
-  GNDVI = train(LAI ~ gndvi, data = merged_data, method = "lm", trControl = ctrl),
-  EVI   = train(LAI ~ evi, data = merged_data, method = "lm", trControl = ctrl)
-)
+field_data_plots <- inner_join(subplots, field_data, by = "layer")
 
-# Train models for SPAD
-spad_models <- list(
-  NDVI  = train(SPAD ~ ndvi, data = merged_data, method = "lm", trControl = ctrl),
-  NDRE  = train(SPAD ~ ndre, data = merged_data, method = "lm", trControl = ctrl),
-  GNDVI = train(SPAD ~ gndvi, data = merged_data, method = "lm", trControl = ctrl),
-  EVI   = train(SPAD ~ evi, data = merged_data, method = "lm", trControl = ctrl)
-)
+# Extract spectral values per subplot
+extracted_values <- extract(ms_image, vect(field_data_plots), fun = mean, na.rm = TRUE)
+analysis_data <- cbind(st_drop_geometry(field_data_plots), extracted_values[,-1])
+write.csv(analysis_data, "DS4_field_spectral_data.csv", row.names = FALSE)
 
-5. Compare Performance
-# Summarize results
-lai_results <- resamples(lai_models)
-spad_results <- resamples(spad_models)
+4. Regression Modeling
 
-summary(lai_results)
-summary(spad_results)
+Fit models for LAI and SPAD against each vegetation index:
 
-# Visualize comparisons
-bwplot(lai_results, metric = "Rsquared")
-bwplot(spad_results, metric = "Rsquared")
-bwplot(lai_results, metric = "RMSE")
-bwplot(spad_results, metric = "RMSE")
+lm_lai_ndvi  <- lm(LAI ~ ndvi,  data = analysis_data)
+lm_lai_gndvi <- lm(LAI ~ gndvi, data = analysis_data)
+lm_lai_ndre  <- lm(LAI ~ ndre,  data = analysis_data)
+lm_lai_evi   <- lm(LAI ~ evi,   data = analysis_data)
 
-6. Select Best Model Automatically
-# Select best LAI model (highest R²)
-lai_best <- lai_models[[which.max(sapply(lai_models, function(m) max(m$results$Rsquared)))]]
-lai_best_index <- names(lai_models)[which.max(sapply(lai_models, function(m) max(m$results$Rsquared)))]
+lm_spad_ndvi  <- lm(SPAD ~ ndvi,  data = analysis_data)
+lm_spad_gndvi <- lm(SPAD ~ gndvi, data = analysis_data)
+lm_spad_ndre  <- lm(SPAD ~ ndre,  data = analysis_data)
+lm_spad_evi   <- lm(SPAD ~ evi,   data = analysis_data)
 
-# Select best SPAD model (highest R²)
-spad_best <- spad_models[[which.max(sapply(spad_models, function(m) max(m$results$Rsquared)))]]
-spad_best_index <- names(spad_models)[which.max(sapply(spad_models, function(m) max(m$results$Rsquared)))]
+Scatterplots are generated for each index with regression lines (using ggplot2).
 
-print(lai_best)
-print(spad_best)
+5. Cross-Validation (Caret)
+ctrl <- trainControl(method = "cv", number = 5)
 
-7. Generate Prediction Maps
-# Predict LAI using best index
-lai_map <- predict(ms_image[[tolower(lai_best_index)]], lai_best$finalModel)
+# LAI models
+lai_ndvi_cv  <- train(LAI ~ ndvi,  data = analysis_data, method = "lm", trControl = ctrl)
+lai_gndvi_cv <- train(LAI ~ gndvi, data = analysis_data, method = "lm", trControl = ctrl)
+lai_ndre_cv  <- train(LAI ~ ndre,  data = analysis_data, method = "lm", trControl = ctrl)
+lai_evi_cv   <- train(LAI ~ evi,   data = analysis_data, method = "lm", trControl = ctrl)
+
+# SPAD models
+spad_ndvi_cv  <- train(SPAD ~ ndvi,  data = analysis_data, method = "lm", trControl = ctrl)
+spad_gndvi_cv <- train(SPAD ~ gndvi, data = analysis_data, method = "lm", trControl = ctrl)
+spad_ndre_cv  <- train(SPAD ~ ndre,  data = analysis_data, method = "lm", trControl = ctrl)
+spad_evi_cv   <- train(SPAD ~ evi,   data = analysis_data, method = "lm", trControl = ctrl)
+
+
+Performance is compared using R² and RMSE with dotplots.
+
+6. Prediction Maps
+# Best-performing indices: NDRE (LAI) and GNDVI (SPAD)
+lai_map <- predict(ms_image$ndre, lai_ndre_cv$finalModel)
 lai_map[lai_map < 0] <- 0
-plot(lai_map, col = viridis(100), main = paste("Predicted LAI Map -", lai_best_index))
-writeRaster(lai_map, "Predicted_LAI_Best.tif", overwrite = TRUE)
+writeRaster(lai_map, "Predicted_LAI_CV.tif", overwrite = TRUE)
 
-# Predict SPAD using best index
-spad_map <- predict(ms_image[[tolower(spad_best_index)]], spad_best$finalModel)
+spad_map <- predict(ms_image$gndvi, spad_gndvi_cv$finalModel)
 spad_map[spad_map < 0] <- 0
-plot(spad_map, col = viridis(100), main = paste("Predicted SPAD Map -", spad_best_index))
-writeRaster(spad_map, "Predicted_SPAD_Best.tif", overwrite = TRUE)
+writeRaster(spad_map, "Predicted_SPAD_CV.tif", overwrite = TRUE)
+
+7. Correlation Analysis
+correlation <- cor(analysis_data$LAI, analysis_data$SPAD, use = "complete.obs")
+print(paste("Correlation between LAI and SPAD:", round(correlation, 3)))
+
+Scatterplot with regression line shows the relationship between LAI and SPAD.
 
 📊 Results
-
-LAI → NDRE was selected as the best-performing index (highest R², lowest RMSE).
-
-SPAD → GNDVI was selected as the best-performing index (highest R²), though NDVI showed the lowest RMSE.
-
-EVI underperformed for both LAI and SPAD.
+LAI: NDRE performed best (highest R² ≈ 0.75; lowest RMSE ≈ 0.73).
+SPAD: GNDVI performed best (highest R² ≈ 0.85); NDVI had the lowest RMSE (~3.6).
+EVI: Weakest performance for both LAI and SPAD.
+LAI and SPAD were positively correlated (r ≈ 0.6–0.7 depending on dataset).
 
 🌍 Applications
+Precision agriculture (crop vigor, canopy development monitoring).
+Early stress detection and yield prediction.
+Supporting sustainable land and crop management.
 
-Precision agriculture (crop vigor and canopy development).
-
-Yield prediction and early stress detection.
-
-Supporting sustainable farm management practices.
+🛡️ License
+This course is licensed under the Apache-2.0. You are free to use, modify, and share this project with proper attribution.
