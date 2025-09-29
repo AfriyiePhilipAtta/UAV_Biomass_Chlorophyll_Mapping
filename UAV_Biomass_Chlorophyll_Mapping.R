@@ -140,7 +140,7 @@ lai_map[lai_map < 0] <- 0
 plot(lai_map, col = viridis(100), main = "Predicted LAI Map")
 writeRaster(lai_map, "Predicted_LAI_CV.tif", overwrite = TRUE)
 
-spad_map <- predict(ms_image$ndre, spad_ndre_cv$finalModel)
+spad_map <- predict(ms_image$gndvi, spad_gndvi_cv$finalModel)
 spad_map[spad_map < 0] <- 0
 plot(spad_map, col = viridis(100), main = "Predicted SPAD Map")
 writeRaster(spad_map, "Predicted_SPAD_CV.tif", overwrite = TRUE)
