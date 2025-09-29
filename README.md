@@ -3,35 +3,34 @@ This project demonstrates the use of UAV multispectral imagery and field data to
 📂 Repository Structure
 UAV-LAI-SPAD-Prediction/
 │
-├── datasets/                # Raw UAV imagery, AOI, subplots, and field data
-│   ├── DS4_UAV_Multispectral_Image.tif
-│   ├── DS4_Subplots.gpkg
-│   ├── DS4_Fielddata.csv
-│   └── DS4_field_spectral_data.csv
+├── datasets/ # Raw UAV imagery, AOI, subplots, and field data
+│ ├── DS4_UAV_Multispectral_Image.tif
+│ ├── DS4_Subplots.gpkg
+│ ├── DS4_Fielddata.csv
+│ └── DS4_field_spectral_data.csv
 │
-├── scripts/                 # R scripts for full workflow
-│   ├── compute_indices.R
-│   ├── merge_field_data.R
-│   ├── train_models.R
-│   ├── validate_models.R
-│   └── predict_maps.R
+├── scripts/ # R scripts for full workflow
+│ ├── compute_indices.R
+│ ├── merge_field_data.R
+│ ├── train_models.R
+│ ├── validate_models.R
+│ └── predict_maps.R
 │
-├── results/                 # Model outputs and prediction maps
-│   ├── Predicted_LAI_CV.tif
-│   ├── Predicted_SPAD_CV.tif
-│   └── performance_summary.csv
+├── results/ # Model outputs and prediction maps
+│ ├── Predicted_LAI_CV.tif
+│ ├── Predicted_SPAD_CV.tif
+│ └── performance_summary.csv
 │
-├── docs/                    # Documentation and figures
-│   ├── README.md
-│   └── plots/
-│       ├── LAI_vs_NDVI.png
-│       ├── LAI_vs_NDRE.png
-│       ├── SPAD_vs_GNDVI.png
-│       ├── Rsquared_comparison.png
-│       └── RMSE_comparison.png
+├── docs/ # Documentation and figures
+│ ├── README.md
+│ └── plots/
+│ ├── LAI_vs_NDVI.png
+│ ├── LAI_vs_NDRE.png
+│ ├── SPAD_vs_GNDVI.png
+│ ├── Rsquared_comparison.png
+│ └── RMSE_comparison.png
 │
-├── LICENSE                  # Open-source license
-└── .gitignore               # Ignore large files, temporary data, logs
+├── LICENSE # Open-source license
 
             
 
