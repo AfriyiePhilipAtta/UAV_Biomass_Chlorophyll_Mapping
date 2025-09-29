@@ -5,13 +5,21 @@ This project demonstrates the use of UAV multispectral imagery and field data to
 📂 Project Structure
 
 DS4_UAV_Multispectral_Image.tif → UAV multispectral imagery (raw spectral bands).
+
 DS4_AOI.gpkg → Area of Interest (AOI) boundary shapefile.
+
 DS4_Subplots.gpkg → Subplot boundaries for field sampling.
+
 DS4_field_spectral_data.csv → Spectral readings extracted from UAV imagery.
+
 DS4_Fielddata.csv → Ground truth LAI and SPAD measurements.
+
 Predicted_LAI_CV.tif → Predicted LAI raster (cross-validation output using NDRE).
+
 Predicted_SPAD_CV.tif → Predicted SPAD raster (cross-validation output using GNDVI/NDVI).
+
 README.md → Project documentation.
+
 LICENSE → Open-source license (MIT).
 
 ⚙️ Requirements
